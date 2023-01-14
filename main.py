@@ -33,4 +33,4 @@ for vac in vacancy_tags:
     pprint(vacansy_body)   
 
 # pprint(len(vacancy_tags)
-       
+ 
