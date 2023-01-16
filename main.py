@@ -1,5 +1,6 @@
 import requests
 import re
+import json
 from bs4 import BeautifulSoup
 from fake_headers import Headers
 from pprint import pprint
@@ -27,45 +28,37 @@ def _find_vacancy(link):
 def vacancy_list(data):
     vacancy_list = []
     vacancy_list_json = []
+    
     for vac in data:
         link = vac['href']
         x = _find_vacancy(link)
         if len(x) > 0:
             vacancy_list.append(vac)
-            # vacancy_html = requests.get(HOST, headers=_get_headers()).text
-            # city_name = BeautifulSoup(vacancy_html, features='lxml').find('div', class_="vacancy-serp-item__info")
-            # city = city_name.find('div', class_="bloko-text").text
-            # print(city)
-    
+                
     for vac in vacancy_list:    
         vacancy_link = vac['href']
         vacancy_html = requests.get(vacancy_link, headers=_get_headers()).text
         vacancy_tag = BeautifulSoup(vacancy_html, features='lxml')
-        vacancy_name = vacancy_tag.find(
+        vacancy_title = vacancy_tag.find(
                         'h1', class_='bloko-header-section-1').text
         vacancy_salary = vacancy_tag.find(
                         'span', class_='bloko-header-section-2 bloko-header-section-2_lite').text
         company = vacancy_tag.find(
                  'div', class_='vacancy-company-details').text
+        city_name = vacancy_tag.find('div', attrs={'data-qa': 'vacancy-serp__vacancy-address'}).text
+        vacancy_list_json.append({'title':vacancy_title, 'link': vacancy_link,
+                                  'company': company, 'city':city_name, 'salary': vacancy_salary})  
         
-        vacancy_city = BeautifulSoup(vac, features='lxml')
-        pprint(vacancy_city)
-        # city = BeautifulSoup(vac, features='lxml') # vacancy_tag.find('a', class_="bloko-link bloko-link_kind-tertiary bloko-link_disable-visited")
-        # city_name = city.find()
-        # # city = _find_city(city_name)
-        # print(vacancy_name)
-        # print(vacancy_salary)
-        # print(company)
-        # pprint(city_name)
     return vacancy_list_json        
 
-# def write_json(data):
-    
-      
+def write_json(data):
+    with open ('job_list.json', 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+
+     
 if __name__ == '__main__':
-    HOST = 'https://spb.hh.ru/search/vacancy?area=1&area=2&search_field=name&search_field=company_name&search_field=description&text=python'
+    HOST = 'https://spb.hh.ru/search/vacancy?text=python&area=1&area=2'
     x = vacancy_tag_all(HOST)
     y = vacancy_list(x)
-    # pprint(x)
-# pprint(len(vacancy_tags)
- 
+    write_json(y)
